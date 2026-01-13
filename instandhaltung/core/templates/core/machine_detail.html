@@ -1,0 +1,108 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="m-0">{{ machine.name }}</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Inventarnummer:</strong> {{ machine.inventory_number }}</p>
+                <p><strong>Bereich:</strong> {{ machine.subarea.department.name }} / {{ machine.subarea.name }}</p>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" disabled>📝 Daten bearbeiten (Demnächst)</button>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="mb-3">Offene Maßnahmen 🛠️</h4>
+        
+        {% if orders %}
+            <div class="list-group mb-4">
+                {% for order in orders %}
+                    <a href="{% url 'order_detail' order.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">{{ order.title }}</div>
+                            <small class="text-muted">Prio: {{ order.get_priority_display }}</small>
+                        </div>
+                        <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-success">
+                Aktuell liegen keine offenen Störungen vor. 🎉
+            </div>
+        {% endif %}
+        
+        <div class="d-grid">
+             <a href="{% url 'machine_list' %}" class="btn btn-secondary">Zurück zur Übersicht</a>
+        </div>
+
+    </div>
+
+    <div class="col-md-7">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>📋 Logbuch & Historie</h3>
+            <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#logEntryModal">
+                ➕ Eintrag hinzufügen
+            </button>
+        </div>
+
+        <div class="card">
+            <ul class="list-group list-group-flush">
+                {% for log in logs %}
+                    <li class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 text-primary">{{ log.user.username }}</h6>
+                            <small class="text-muted">{{ log.created_at|date:"d.m.Y H:i" }}</small>
+                            {% if log.user == request.user %}
+    <a href="{% url 'log_update' machine.id log.id %}" class="btn btn-sm btn-outline-secondary ms-2">
+        ✏️
+    </a>
+{% endif %}
+                        </div>
+                        <p class="mb-1">{{ log.content }}</p>
+                         {% if log.order %}
+    <small class="text-muted">
+        Zu Auftrag: <a href="{% url 'order_detail' log.order.id %}">{{ log.order.title }}</a>
+    </small>
+{% endif %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-center text-muted py-4">
+                        Noch keine Einträge im Logbuch.
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="logEntryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Neuer Logbuch-Eintrag ✍️</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    
+                    {{ log_form.content }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'core/base.html' %} 
+{% block content %}<!DOCTYPE html>
+<html>
+<head>
+    <title>Maschinenverzeichnis</title>
+</head>
+<body>
+
+    <div class="mb-3">
+        <h5 class="text-muted">Bereich wählen:</h5>
+        <div class="btn-group flex-wrap">
+            {% for dept in departments %}
+                <a href="?department={{ dept.id }}" 
+                   class="btn {% if dept.id == selected_dept %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ dept.name }}
+                </a>
+            {% endfor %}
+            <a href="{% url 'machine_list' %}" class="btn btn-secondary">Alle anzeigen</a>
+        </div>
+    </div>
+
+    {% if subareas %}
+    <div class="mb-4 ms-4 border-start ps-3 border-primary">
+        <h6 class="text-muted">Unterbereich filtern:</h6>
+        <div class="btn-group flex-wrap">
+            {% for sub in subareas %}
+                <a href="?department={{ selected_dept }}&subarea={{ sub.id }}" 
+                   class="btn btn-sm {% if sub.id == selected_sub %}btn-success{% else %}btn-outline-success{% endif %}">
+                    {{ sub.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <hr>
+    <h2>Equipments</h2>
+
+    
+            {% if not machines and selected_dept %}
+        <div class="alert alert-info">
+            In diesem Bereich gibt es noch keine Maschinen.
+        </div>
+    {% endif %}
+
+    <div class="row">
+        {% for machine in machines %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm hover-effect">
+                    <div class="card-header bg-light text-muted small">
+                        <i class="bi bi-geo-alt"></i> {{ machine.subarea.name|default:"Kein Bereich" }}
+                    </div>
+                    
+                    <div class="card-body">
+                        <h4 class="card-title text-primary">
+    <a href="{% url 'machine_detail' machine.id %}" class="text-decoration-none text-primary">
+        {{ machine.name }}
+    </a>
+</h4>
+                        <p class="card-text">
+                            Maschinen-ID: #{{ machine.id }}
+                        </p>
+                    </div>
+                    
+                    <div class="card-footer bg-white border-top-0">
+                        <button type="button" 
+        class="btn btn-outline-danger w-100 js-open-modal" 
+        data-id="{{ machine.id }}" 
+        data-name="{{ machine.name }}">
+    🚨 Störung melden
+</button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
+
+<div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Störung melden</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form method="post" id="orderFormElement">
+                <div class="modal-body">
+                    <p class="lead">Maschine: <strong id="modalMachineName"></strong></p>
+                    {% csrf_token %}
+                    {{ order_form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-danger">Meldung speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Alle Knöpfe mit unserer Klasse finden
+        const buttons = document.querySelectorAll('.js-open-modal');
+        
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                // 2. Daten aus dem gedrückten Knopf holen
+                const machineId = this.getAttribute('data-id');
+                const machineName = this.getAttribute('data-name');
+                
+                // 3. Namen und Link im Modal anpassen
+                document.getElementById('modalMachineName').textContent = machineName;
+                const form = document.getElementById('orderFormElement');
+                form.action = '/order/create/' + machineId + '/';
+                
+                // 4. Das Modal manuell öffnen (Der wichtige Teil!)
+                const modalElement = document.getElementById('orderModal');
+                // Wir erstellen eine "Instanz" des Modals
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            });
+        });
+    });
+</script>
+{% endblock %}
