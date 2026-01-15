@@ -50,16 +50,29 @@ class Order(models.Model):
         PLANNED = 'PLN', 'Disponiert'
         IN_PROGRESS = 'INP', 'In Arbeit'
         PAUSED = 'PAU', 'Pausiert'
+        WORK_DONE = 'DONE', 'Reparatur fertig'
         TRIAL = 'TRI', 'Probelauf'
         REVIEW = 'REV', 'Abnahme'
         CLOSED = 'CLO', 'Geschlossen'
+
+    class OrderType(models.TextChoices):
+        REPAIR = 'REPAIR', 'Reparatur 🔧'
+        MAINTENANCE = 'MAINTENANCE', 'Wartung 🛠️'
+        INSPECTION = 'INSPECTION', 'Inspektion 🔍'
+        OTHER = 'OTHER', 'Sonstiges 📝'
+
+    order_type = models.CharField(max_length=50, choices=OrderType.choices, default=OrderType.REPAIR)
+    
+    # ManyToMany für Mehrfachauswahl (blank=True erlaubt, dass man es erstmal leer lässt)
+    responsible_users = models.ManyToManyField('User', related_name='responsible_orders', blank=True, verbose_name="Verantwortliche")
+    technicians = models.ManyToManyField('User', related_name='assigned_orders', blank=True, verbose_name="Ausführende Techniker")
 
     machine = models.ForeignKey(Machine, on_delete=models.CASCADE, related_name='orders')
     creator = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='created_orders')
     title = models.CharField(max_length=200)
     description = models.TextField()
     priority = models.CharField(max_length=3, choices=Priority.choices, default=Priority.LOW)
-    status = models.CharField(max_length=3, choices=Status.choices, default=Status.NEW)
+    status = models.CharField(max_length=4, choices=Status.choices, default=Status.NEW)
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(null=True, blank=True)
 

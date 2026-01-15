@@ -25,6 +25,15 @@
                     <div class="d-flex justify-content-between">
                         <span>Prio: <strong>{{ order.get_priority_display }}</strong></span>
                         <span>Erstellt von: <strong>{{ order.creator.username }}</strong></span>
+                        <hr>
+                    <h5 class="mt-3">Aktionen 🎮</h5>
+                    <div class="d-grid gap-2">
+                        
+                        {% if order.status == 'INP' or order.status == 'PAU' %}
+                            <a href="#" class="btn btn-success">✅ Reparatur fertig melden</a>
+                        {% endif %}
+
+                        </div>
                     </div>
                 </div>
             </div>
